@@ -1,6 +1,7 @@
 pragma Singleton
 import QtQuick 2.15
 import "keydata.js" as Fn
+import "i3ipc.js" as I3
 
 QtObject {
     // State properties
@@ -13,6 +14,9 @@ QtObject {
     property bool allkeys: true
     property int count: 1
     property bool skipright: true
+    
+    // i3 integration property
+    property bool i3ShortcutsDisabled: false
 
     // UI properties
     property string resultText: ""
@@ -28,6 +32,20 @@ QtObject {
     property Timer errorResetTimer: Timer {
         interval: 1000
         onTriggered: resultOpacity = 0
+    }
+    
+    // Initialize i3 integration when app starts training mode
+    function initI3Integration() {
+        i3ShortcutsDisabled = I3.disableI3Shortcuts();
+        console.log("i3 integration initialized, shortcuts disabled:", i3ShortcutsDisabled);
+    }
+    
+    // Restore i3 shortcuts when going back to menu
+    function restoreI3Shortcuts() {
+        if (i3ShortcutsDisabled) {
+            i3ShortcutsDisabled = !I3.enableI3Shortcuts();
+            console.log("i3 shortcuts restored, disabled status:", i3ShortcutsDisabled);
+        }
     }
 
     function resetSequence() {
@@ -61,6 +79,8 @@ QtObject {
 
         else if (event.key === Qt.Key_Escape)
          {
+             // Restore i3 shortcuts when Escape is pressed
+             restoreI3Shortcuts()
              event.accepted=true
              return
          }
@@ -161,5 +181,10 @@ QtObject {
         resultColor = success ? "green" : "red"
         resultOpacity = 1
         if (!success) errorResetTimer.restart()
+    }
+    
+    // Ensure i3 shortcuts are restored when app is closed or crashed
+    Component.onDestruction: {
+        restoreI3Shortcuts()
     }
 }

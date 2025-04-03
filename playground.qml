@@ -12,7 +12,7 @@ Page {
     title: "Keyboard Shortcut Trainer"
     anchors.fill: parent
 
-      property StackView stackView
+    property StackView stackView
 
     background: Rectangle {
         color: "transparent"
@@ -20,7 +20,14 @@ Page {
 
     Component.onCompleted: {
         Store.resetSequence()
+        // Initialize i3 integration - disable i3 shortcuts
+        Store.initI3Integration()
         keyHandler.forceActiveFocus()
+    }
+
+    Component.onDestruction: {
+        // Ensure i3 shortcuts are restored when this page is destroyed
+        Store.restoreI3Shortcuts()
     }
 
     Rectangle {
@@ -34,6 +41,8 @@ Page {
 
                             if(event.key===Qt.Key_Escape)
                             {
+                                // Restore i3 shortcuts before popping the view
+                                Store.restoreI3Shortcuts()
                                 stackView.pop()
                                 event.accepted=true
                                 return

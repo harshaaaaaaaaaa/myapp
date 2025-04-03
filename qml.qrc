@@ -4,5 +4,7 @@
         <file>Store.qml</file>
         <file>keydata.js</file>
         <file>playground.qml</file>
+        <file>i3ipc.js</file>
+        <file>i3socket_process.qml</file>
     </qresource>
 </RCC>
