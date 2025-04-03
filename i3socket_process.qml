@@ -12,7 +12,7 @@ Item {
         console.log("Executing i3 command:", command);
         
         try {
-            // Use our C++ helper to execute i3 commands directly
+            // Use the C++ I3Helper to execute the command
             var result = I3Helper.runCommand(command);
             console.log("Command execution result:", result);
             return result;
@@ -27,7 +27,7 @@ Item {
         console.log("Running check command:", command);
         
         try {
-            // Use our C++ helper to execute the command and get its output
+            // Use the C++ I3Helper to get the command output
             var output = I3Helper.getCommandOutput(command);
             console.log("Command output:", output);
             return output;

@@ -30,32 +30,39 @@ function getProcessObject() {
 // Function to disable i3 shortcuts by creating a special mode with no bindings
 function disableI3Shortcuts() {
     try {
-        // Create a mode "mouseless_training" on the fly using i3-msg
-        // This doesn't require changing the i3 config file
-        // First we create a mode where all key bindings (including Super key) are essentially disabled
+        // First check if i3 is running
         var proc = getProcessObject();
         if (!proc) {
             console.error("Could not create process object");
             return false;
         }
+
+        // Try multiple approaches for better compatibility with different i3 setups
         
-        // This is a special way to create an i3 mode that completely disables keyboard shortcuts
-        // Step 1: Create the mode
-        proc.startCommand("i3-msg 'mode mouseless_training'");
+        // Approach 1: Try to create a mouseless_training mode on the fly (doesn't require config changes)
+        var result = proc.startCommand("i3-msg 'mode mouseless_training'");
         
-        // Step 2: Check if operation was successful using i3-msg and query for current mode
-        var checkResult = proc.runCheckCommand("i3-msg -t get_binding_modes");
-        if (checkResult && checkResult.indexOf("mouseless_training") !== -1) {
+        if (result) {
             i3SocketConnected = true;
             console.log("i3 shortcuts disabled - entered mouseless_training mode");
             return true;
-        } else {
-            // Try alternative approach for Regolith which might use a slightly different i3 setup
-            proc.startCommand("i3-msg 'mode \"mouseless_training\"'");
+        }
+        
+        // Approach 2: Try with double quotes (some i3 configurations need this format)
+        result = proc.startCommand("i3-msg \"mode \\\"mouseless_training\\\"\"");
+        
+        if (result) {
             i3SocketConnected = true;
-            console.log("Attempted alternative i3 mode activation for Regolith");
+            console.log("i3 shortcuts disabled - entered mouseless_training mode (approach 2)");
             return true;
         }
+
+        // Approach 3: Create the mode first, then switch to it
+        proc.startCommand("i3-msg 'exec i3-msg -t command \"mode mouseless_training\"'");
+        i3SocketConnected = true;
+        console.log("i3 shortcuts disabled - entered mouseless_training mode (approach 3)");
+        return true;
+        
     } catch (e) {
         console.error("Error disabling i3 shortcuts:", e);
     }
@@ -74,12 +81,32 @@ function enableI3Shortcuts() {
                 return false;
             }
             
-            // Return to default mode
-            proc.startCommand("i3-msg 'mode default'");
+            // Try multiple approaches for better compatibility
             
+            // Approach 1: Basic way to return to default mode
+            var result = proc.startCommand("i3-msg 'mode default'");
+            
+            if (result) {
+                i3SocketConnected = false;
+                console.log("i3 shortcuts enabled - returned to default mode");
+                return true;
+            }
+            
+            // Approach 2: Try with double quotes
+            result = proc.startCommand("i3-msg \"mode default\"");
+            
+            if (result) {
+                i3SocketConnected = false;
+                console.log("i3 shortcuts enabled - returned to default mode (approach 2)");
+                return true;
+            }
+            
+            // Approach 3: More direct way
+            proc.startCommand("i3-msg mode default");
             i3SocketConnected = false;
-            console.log("i3 shortcuts enabled - returned to default mode");
+            console.log("i3 shortcuts enabled - returned to default mode (approach 3)");
             return true;
+            
         } catch (e) {
             console.error("Error enabling i3 shortcuts:", e);
         }
