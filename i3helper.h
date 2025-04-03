@@ -13,13 +13,13 @@ class I3Helper : public QObject
 public:
     explicit I3Helper(QObject *parent = nullptr) : QObject(parent) {}
 
-    Q_INVOKABLE bool runCommand(const QString &command) {
+    Q_INVOKABLE bool runCommand(const QString &command, int timeout = -1) {
         QProcess process;
         qDebug() << "Executing i3 command:" << command;
         
         process.start("/bin/sh", QStringList() << "-c" << command);
-        if (!process.waitForFinished(2000)) {
-            qDebug() << "Command execution failed:" << process.errorString();
+        if (!process.waitForFinished(timeout)) {
+            qDebug() << "Command execution failed or timed out:" << process.errorString();
             return false;
         }
         
@@ -34,10 +34,11 @@ public:
         return (process.exitCode() == 0);
     }
     
-    Q_INVOKABLE QString getCommandOutput(const QString &command) {
+    Q_INVOKABLE QString getCommandOutput(const QString &command, int timeout = -1) {
         QProcess process;
         process.start("/bin/sh", QStringList() << "-c" << command);
-        if (!process.waitForFinished(2000)) {
+        if (!process.waitForFinished(timeout)) {
+            qDebug() << "Command execution failed or timed out:" << process.errorString();
             return "";
         }
         

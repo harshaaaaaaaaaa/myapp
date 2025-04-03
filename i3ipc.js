@@ -119,3 +119,33 @@ function enableI3Shortcuts() {
 function areShortcutsDisabled() {
     return i3SocketConnected;
 }
+
+// i3ipc.js - Interface for i3 IPC communication
+
+function startCommand(command) {
+    console.log("Executing i3 command:", command);
+    
+    try {
+        // Use the C++ I3Helper to run the command
+        // Pass -1 for no timeout (blocking indefinitely)
+        var result = I3Helper.runCommand(command, -1);
+        console.log("Command execution result:", result);
+        return result;
+    } catch (e) {
+        console.error("Error executing command:", e);
+        return false;
+    }
+}
+
+function checkCommand(command) {
+    console.log("Running i3 command:", command);
+    
+    try {
+        // Get the command output with a specific timeout (10 seconds)
+        var output = I3Helper.getCommandOutput(command, 10000);
+        return output;
+    } catch (e) {
+        console.error("Error checking command:", e);
+        return "";
+    }
+}
