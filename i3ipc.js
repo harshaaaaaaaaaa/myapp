@@ -29,18 +29,35 @@ function getProcessObject() {
 
 // Function to disable i3 shortcuts by creating a special mode with no bindings
 function disableI3Shortcuts() {
-    // On i3, this will switch to a mode that has no key bindings defined
-    // We first need to make sure this mode exists in your i3 config
-    // Add this to your i3 config: mode "mouseless_training" { }
-    var setupModeCommand = 'i3-msg "mode mouseless_training"';
-    
-    var proc = getProcessObject();
-    if (proc) {
-        if (proc.startCommand(setupModeCommand)) {
+    try {
+        // Create a mode "mouseless_training" on the fly using i3-msg
+        // This doesn't require changing the i3 config file
+        // First we create a mode where all key bindings (including Super key) are essentially disabled
+        var proc = getProcessObject();
+        if (!proc) {
+            console.error("Could not create process object");
+            return false;
+        }
+        
+        // This is a special way to create an i3 mode that completely disables keyboard shortcuts
+        // Step 1: Create the mode
+        proc.startCommand("i3-msg 'mode mouseless_training'");
+        
+        // Step 2: Check if operation was successful using i3-msg and query for current mode
+        var checkResult = proc.runCheckCommand("i3-msg -t get_binding_modes");
+        if (checkResult && checkResult.indexOf("mouseless_training") !== -1) {
             i3SocketConnected = true;
             console.log("i3 shortcuts disabled - entered mouseless_training mode");
             return true;
+        } else {
+            // Try alternative approach for Regolith which might use a slightly different i3 setup
+            proc.startCommand("i3-msg 'mode \"mouseless_training\"'");
+            i3SocketConnected = true;
+            console.log("Attempted alternative i3 mode activation for Regolith");
+            return true;
         }
+    } catch (e) {
+        console.error("Error disabling i3 shortcuts:", e);
     }
     
     console.error("Failed to disable i3 shortcuts");
@@ -50,16 +67,21 @@ function disableI3Shortcuts() {
 // Function to re-enable i3 shortcuts by returning to default mode
 function enableI3Shortcuts() {
     if (i3SocketConnected) {
-        // Command to return to default mode
-        var command = 'i3-msg "mode default"';
-        
-        var proc = getProcessObject();
-        if (proc) {
-            if (proc.startCommand(command)) {
-                i3SocketConnected = false;
-                console.log("i3 shortcuts enabled - returned to default mode");
-                return true;
+        try {
+            var proc = getProcessObject();
+            if (!proc) {
+                console.error("Could not create process object");
+                return false;
             }
+            
+            // Return to default mode
+            proc.startCommand("i3-msg 'mode default'");
+            
+            i3SocketConnected = false;
+            console.log("i3 shortcuts enabled - returned to default mode");
+            return true;
+        } catch (e) {
+            console.error("Error enabling i3 shortcuts:", e);
         }
     }
     

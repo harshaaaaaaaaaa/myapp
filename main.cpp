@@ -1,5 +1,7 @@
 #include <QGuiApplication>
 #include <QQmlApplicationEngine>
+#include <QQmlContext>
+#include "i3helper.h"
 
 int main(int argc, char *argv[])
 {
@@ -10,6 +12,11 @@ int main(int argc, char *argv[])
 
     QQmlApplicationEngine engine;
 
+    // Create and register i3 helper instance
+    I3Helper i3helper;
+    engine.rootContext()->setContextProperty("I3Helper", &i3helper);
+
+    // Register our singleton
     qmlRegisterSingletonType(QStringLiteral("qrc:/Store.qml"),"Store",1,0,"Store");
 
     const QUrl url(QStringLiteral("qrc:/main.qml"));

@@ -4,40 +4,36 @@ import QtQuick.Controls 2.15
 Item {
     id: processItem
     
-    // Use XMLHttpRequest as a workaround for executing commands
+    Component.onCompleted: {
+        console.log("Process handler initialized");
+    }
+    
     function startCommand(command) {
         console.log("Executing i3 command:", command);
         
-        // Create a new XMLHttpRequest
-        var xhr = new XMLHttpRequest();
-        
-        // Since we can't directly execute shell commands from QML, we'll use a hack:
-        // Send an asynchronous request and use the command in a way that i3 can see
-        xhr.onreadystatechange = function() {
-            if (xhr.readyState === XMLHttpRequest.DONE) {
-                console.log("i3 command execution attempt completed");
-            }
-        }
-        
         try {
-            // This is a workaround - in production you'd want to implement a proper
-            // backend service to execute these commands
-            xhr.open("GET", "file:///dev/null");
-            
-            // Execute the command - the actual execution happens through DBus
-            // which i3 listens to, or through directly invoking i3-msg
-            if (command.indexOf("i3-msg") !== -1) {
-                console.log("Executing:", command);
-                xhr.send();
-                return true;
-            } else {
-                console.log("Executing i3-msg with command:", command);
-                xhr.send();
-                return true;
-            }
+            // Use our C++ helper to execute i3 commands directly
+            var result = I3Helper.runCommand(command);
+            console.log("Command execution result:", result);
+            return result;
         } catch (e) {
             console.error("Error executing command:", e);
             return false;
+        }
+    }
+    
+    // Function to query i3 and return the result
+    function runCheckCommand(command) {
+        console.log("Running check command:", command);
+        
+        try {
+            // Use our C++ helper to execute the command and get its output
+            var output = I3Helper.getCommandOutput(command);
+            console.log("Command output:", output);
+            return output;
+        } catch (e) {
+            console.error("Error checking command:", e);
+            return "";
         }
     }
 }
